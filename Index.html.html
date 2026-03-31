@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SwiftFulfil — Fulfilment Centre</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F4F0;
+  --surface: #FFFFFF;
+  --surface2: #F0EFE9;
+  --border: rgba(0,0,0,0.08);
+  --border-med: rgba(0,0,0,0.14);
+  --text: #1A1917;
+  --text2: #6B6963;
+  --text3: #A09C95;
+  --accent: #1A1917;
+  --amber: #D97706;
+  --amber-bg: #FEF3C7;
+  --blue: #1D4ED8;
+  --blue-bg: #DBEAFE;
+  --green: #15803D;
+  --green-bg: #DCFCE7;
+  --red: #B91C1C;
+  --red-bg: #FEE2E2;
+  --orange: #C2410C;
+  --orange-bg: #FFEDD5;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+
+/* ===== LOGIN ===== */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: var(--text); position: relative; overflow: hidden;
+}
+#login-screen::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 80px);
+}
+.login-card {
+  background: var(--surface); border-radius: 20px; padding: 2.5rem; width: 400px;
+  max-width: 95vw; position: relative; box-shadow: var(--shadow-md);
+}
+.login-logo { font-size: 22px; font-weight: 600; margin-bottom: 0.25rem; letter-spacing: -0.5px; }
+.login-sub { font-size: 13px; color: var(--text2); margin-bottom: 2rem; }
+.login-roles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 1.5rem; }
+.role-btn {
+  padding: 12px 8px; border-radius: var(--radius); border: 1.5px solid var(--border);
+  background: var(--surface2); cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.role-btn:hover { border-color: var(--border-med); }
+.role-btn.selected { border-color: var(--text); background: var(--text); color: #fff; }
+.role-btn .role-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+.role-btn .role-name { font-size: 12px; font-weight: 500; }
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 500; color: var(--text2); margin-bottom: 5px; }
+.field input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: inherit; background: var(--surface); color: var(--text); transition: border-color 0.15s; }
+.field input:focus { outline: none; border-color: var(--text); }
+.btn-login { width: 100%; padding: 12px; background: var(--text); color: #fff; border: none; border-radius: var(--radius); font-size: 14px; font-weight: 500; font-family: inherit; cursor: pointer; transition: opacity 0.15s; margin-top: 4px; }
+.btn-login:hover { opacity: 0.85; }
+.login-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 12px; }
+
+/* ===== APP SHELL ===== */
+#app { display: none; min-height: 100vh; }
+.sidebar {
+  width: 220px; background: var(--text); position: fixed; left: 0; top: 0; bottom: 0;
+  display: flex; flex-direction: column; z-index: 10; padding: 1.5rem 0;
+}
+.sidebar-logo { padding: 0 1.25rem 1.5rem; font-size: 18px; font-weight: 600; color: #fff; letter-spacing: -0.5px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 1rem; }
+.sidebar-logo span { font-size: 10px; font-weight: 400; color: rgba(255,255,255,0.4); display: block; margin-top: 2px; letter-spacing: 0.5px; text-transform: uppercase; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 10px 1.25rem;
+  color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.15s; font-size: 13.5px;
+  border-left: 3px solid transparent; margin: 1px 0;
+}
+.nav-item:hover { color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.06); }
+.nav-item.active { color: #fff; background: rgba(255,255,255,0.1); border-left-color: #fff; }
+.nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: #D97706; color: #fff; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; min-width: 18px; text-align: center; }
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 12px 1.25rem; }
+.sidebar-user { padding: 1rem 1.25rem; margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); }
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0; }
+.user-info { display: flex; align-items: center; gap: 8px; }
+.user-name { font-size: 12.5px; font-weight: 500; color: #fff; }
+.user-role { font-size: 11px; color: rgba(255,255,255,0.4); }
+.logout-btn { margin-top: 10px; width: 100%; padding: 8px; background: rgba(255,255,255,0.08); border: none; border-radius: 8px; color: rgba(255,255,255,0.5); font-size: 12px; font-family: inherit; cursor: pointer; transition: all 0.15s; }
+.logout-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+.main { margin-left: 220px; padding: 2rem; min-height: 100vh; }
+.page { display: none; }
+.page.active { display: block; }
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
+.page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.4px; }
+.page-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+/* ===== METRICS ===== */
+.metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 1.75rem; }
+.metric-card {
+  background: var(--surface); border-radius: var(--radius-lg); padding: 1.25rem;
+  border: 1px solid var(--border); box-shadow: var(--shadow); position: relative; overflow: hidden;
+}
+.metric-card::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.metric-card.amber::after { background: var(--amber); }
+.metric-card.blue::after { background: var(--blue); }
+.metric-card.green::after { background: var(--green); }
+.metric-card.red::after { background: var(--red); }
+.metric-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text2); margin-bottom: 8px; }
+.metric-value { font-size: 32px; font-weight: 600; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+.metric-sub { font-size: 12px; color: var(--text3); }
+
+/* ===== CARDS ===== */
+.card { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); box-shadow: var(--shadow); }
+.card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 13.5px; font-weight: 600; }
+.card-body { padding: 1.25rem; }
+
+/* ===== BADGES ===== */
+.badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 500; padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.badge-pending { background: var(--amber-bg); color: var(--amber); }
+.badge-pending::before { background: var(--amber); }
+.badge-processing { background: var(--blue-bg); color: var(--blue); }
+.badge-processing::before { background: var(--blue); }
+.badge-done { background: var(--green-bg); color: var(--green); }
+.badge-done::before { background: var(--green); }
+.badge-issue { background: var(--red-bg); color: var(--red); }
+.badge-issue::before { background: var(--red); }
+
+/* ===== TABLE ===== */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text2); padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); background: var(--surface2); }
+td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+.client-name { font-weight: 500; }
+.client-co { font-size: 12px; color: var(--text2); }
+
+/* ===== BUTTONS ===== */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius); border: 1.5px solid var(--border-med); background: var(--surface); color: var(--text); font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.btn:hover { background: var(--surface2); border-color: var(--border-med); }
+.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn-primary:hover { opacity: 0.85; background: var(--text); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-ghost { border-color: transparent; background: transparent; }
+.btn-ghost:hover { background: var(--surface2); border-color: transparent; }
+.btn-danger { border-color: #fca5a5; color: var(--red); background: var(--red-bg); }
+.btn-danger:hover { background: #fecaca; }
+.btn-success { border-color: #86efac; color: var(--green); background: var(--green-bg); }
+.btn-success:hover { background: #bbf7d0; }
+.btn-whatsapp { background: #25D366; color: #fff; border-color: #25D366; }
+.btn-whatsapp:hover { background: #20b857; }
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ===== FILTERS ===== */
+.filter-bar { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+.chip { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); background: var(--surface); font-size: 12.5px; font-weight: 500; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+.chip:hover { border-color: var(--border-med); color: var(--text); }
+.chip.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+/* ===== FORM ===== */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; font-weight: 500; color: var(--text2); }
+.form-input { padding: 10px 12px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13.5px; font-family: inherit; background: var(--surface); color: var(--text); transition: border-color 0.15s; }
+.form-input:focus { outline: none; border-color: var(--text); }
+textarea.form-input { height: 80px; resize: vertical; }
+
+/* ===== UPLOAD ZONE ===== */
+.upload-zone {
+  border: 2px dashed var(--border-med); border-radius: var(--radius-lg); padding: 2rem 1rem;
+  text-align: center; cursor: pointer; transition: all 0.15s; background: var(--surface2);
+}
+.upload-zone:hover { border-color: var(--text); background: var(--surface); }
+.upload-zone.dragover { border-color: var(--blue); background: var(--blue-bg); }
+.upload-icon-lg { font-size: 36px; display: block; margin-bottom: 8px; }
+.upload-text { font-size: 14px; font-weight: 500; color: var(--text); }
+.upload-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.file-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--blue-bg); color: var(--blue); font-size: 12px; padding: 4px 10px; border-radius: 20px; margin: 4px 4px 0 0; }
+.file-pill button { background: none; border: none; cursor: pointer; color: inherit; font-size: 14px; line-height: 1; padding: 0; }
+
+/* ===== EMPLOYEE CARDS ===== */
+.order-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 1.25rem; margin-bottom: 12px; box-shadow: var(--shadow); transition: box-shadow 0.15s;
+}
+.order-card:hover { box-shadow: var(--shadow-md); }
+.order-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.order-card-id { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.order-card-meta { font-size: 12.5px; color: var(--text2); margin-bottom: 10px; }
+.order-card-notes { font-size: 13px; color: var(--text); background: var(--surface2); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; border-left: 3px solid var(--border-med); }
+.files-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.file-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--blue); background: var(--blue-bg); padding: 4px 10px; border-radius: 6px; }
+
+/* ===== ACTIVITY ===== */
+.activity-list { }
+.activity-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+.activity-text { font-size: 13px; flex: 1; }
+.activity-time { font-size: 12px; color: var(--text3); white-space: nowrap; }
+
+/* ===== BAR CHART ===== */
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-label { font-size: 12px; color: var(--text2); min-width: 90px; }
+.bar-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.34,1.56,0.64,1); }
+.bar-count { font-size: 12px; color: var(--text3); min-width: 20px; text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ===== MODAL ===== */
+.modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+.modal-backdrop.open { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); width: 520px; max-width: 96vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text2); line-height: 1; padding: 0 4px; }
+.modal-body { padding: 1.5rem; }
+.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ===== WHATSAPP PANEL ===== */
+.wa-panel { background: #075E54; border-radius: var(--radius-lg); padding: 1.25rem; color: #fff; }
+.wa-panel-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.wa-panel-sub { font-size: 12px; opacity: 0.7; margin-bottom: 14px; }
+.wa-link-box { background: rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; font-family: 'DM Mono', monospace; font-size: 12px; word-break: break-all; margin-bottom: 12px; }
+.wa-actions { display: flex; gap: 8px; }
+.btn-wa-copy { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+.btn-wa-copy:hover { background: rgba(255,255,255,0.25); }
+
+/* ===== NOTIFICATION TOAST ===== */
+.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { background: var(--text); color: #fff; padding: 12px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md); transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); max-width: 320px; pointer-events: auto; display: flex; align-items: center; gap: 10px; }
+.toast.show { transform: translateX(0); }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+.toast.info { background: var(--blue); }
+
+/* ===== EXPORT / UTILS ===== */
+.two-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.search-input { padding: 8px 12px 8px 36px; border: 1.5px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: inherit; background: var(--surface); color: var(--text); width: 220px; }
+.search-input:focus { outline: none; border-color: var(--text); }
+.search-wrap { position: relative; }
+.search-wrap::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; pointer-events: none; }
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--text2); }
+.empty-icon { font-size: 40px; display: block; margin-bottom: 10px; }
+.empty-text { font-size: 14px; }
+.info-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.info-label { font-size: 12px; color: var(--text2); min-width: 100px; }
+.info-val { font-size: 13px; font-weight: 500; }
+.section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text3); margin-bottom: 10px; }
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 1rem; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .two-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">⚡ SwiftFulfil</div>
+    <div class="login-sub">Fulfilment Centre Management</div>
+    <p style="font-size:12px;font-weight:500;color:var(--text2);margin-bottom:8px;">Sign in as</p>
+    <div class="login-roles">
+      <div class="role-btn selected" onclick="selectRole('owner',this)">
+        <span class="role-icon">👑</span>
+        <span class="role-name">Owner</span>
+      </div>
+      <div class="role-btn" onclick="selectRole('employee',this)">
+        <span class="role-icon">📦</span>
+        <span class="role-name">Employee</span>
+      </div>
+      <div class="role-btn" onclick="selectRole('client',this)">
+        <span class="role-icon">🏢</span>
+        <span class="role-name">Client</span>
+      </div>
+    </div>
+    <div class="field"><label>Name / Username</label><input type="text" id="login-name" placeholder="Enter your name" value="Alex"></div>
+    <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" value="password"></div>
+    <button class="btn-login" onclick="login()">Sign in →</button>
+    <div class="login-hint">Demo: any name + password = "password"</div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">⚡ SwiftFulfil <span>Fulfilment Centre</span></div>
+    <div id="nav-links"></div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-user">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">A</div>
+        <div>
+          <div class="user-name" id="user-name-display">Alex</div>
+          <div class="user-role" id="user-role-display">Owner</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Dashboard</div>
+          <div class="page-sub" id="dash-date"></div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+          <button class="btn btn-sm btn-primary" onclick="showPage('submit')">+ New order</button>
+        </div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-card amber"><div class="metric-label">Total orders</div><div class="metric-value" id="m-total">0</div><div class="metric-sub">all time</div></div>
+        <div class="metric-card blue"><div class="metric-label">Pending</div><div class="metric-value" id="m-pending">0</div><div class="metric-sub">awaiting processing</div></div>
+        <div class="metric-card" style="--top:var(--orange)"><div class="metric-label">In progress</div><div class="metric-value" id="m-progress">0</div><div class="metric-sub" style="position:relative">being picked & packed</div></div>
+        <div class="metric-card green"><div class="metric-label">Completed</div><div class="metric-value" id="m-done">0</div><div class="metric-sub">dispatched</div></div>
+      </div>
+      <div class="two-grid" style="margin-bottom:1.25rem">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Status breakdown</span></div>
+          <div class="card-body" id="bar-chart"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent activity</span><span style="font-size:12px;color:var(--text2)" id="activity-count"></span></div>
+          <div class="card-body" id="activity-feed" style="padding:0.75rem 1.25rem;max-height:240px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Recent orders</span><button class="btn btn-sm btn-ghost" onclick="showPage('orders')">View all →</button></div>
+        <div class="table-wrap"><table id="dash-table">
+          <thead><tr><th>Order ID</th><th>Client</th><th>Submitted</th><th>Files</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="dash-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- All Orders -->
+    <div class="page" id="page-orders">
+      <div class="page-header">
+        <div><div class="page-title">All orders</div></div>
+        <div class="btn-group">
+          <div class="search-wrap"><input class="search-input" id="search-input" placeholder="Search..." oninput="renderOrders()"></div>
+          <button class="btn btn-sm" onclick="exportCSV()">⬇ CSV</button>
+        </div>
+      </div>
+      <div class="filter-bar" id="orders-filter">
+        <div class="chip active" onclick="setFilter(this,'all')">All</div>
+        <div class="chip" onclick="setFilter(this,'pending')">Pending</div>
+        <div class="chip" onclick="setFilter(this,'processing')">In progress</div>
+        <div class="chip" onclick="setFilter(this,'done')">Completed</div>
+        <div class="chip" onclick="setFilter(this,'issue')">Issues</div>
+      </div>
+      <div class="card">
+        <div class="table-wrap"><table>
+          <thead><tr><th>Order ID</th><th>Client</th><th>Company</th><th>Date</th><th>Files</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="orders-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- Employee Queue -->
+    <div class="page" id="page-queue">
+      <div class="page-header">
+        <div><div class="page-title">My queue</div><div class="page-sub">Pick, pack and dispatch orders below</div></div>
+      </div>
+      <div class="filter-bar" id="emp-filter">
+        <div class="chip active" onclick="setEmpFilter(this,'all')">All</div>
+        <div class="chip" onclick="setEmpFilter(this,'pending')">Pending</div>
+        <div class="chip" onclick="setEmpFilter(this,'processing')">In progress</div>
+        <div class="chip" onclick="setEmpFilter(this,'done')">Done</div>
+        <div class="chip" onclick="setEmpFilter(this,'issue')">Issues</div>
+      </div>
+      <div id="emp-list"></div>
+    </div>
+
+    <!-- Submit Order (Client) -->
+    <div class="page" id="page-submit">
+      <div class="page-header">
+        <div><div class="page-title">Submit an order</div><div class="page-sub">Upload your order PDF and labels</div></div>
+      </div>
+      <div style="max-width:640px">
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header"><span class="card-title">Order details</span></div>
+          <div class="card-body">
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Your name *</label><input class="form-input" id="f-name" placeholder="Jane Smith"></div>
+              <div class="form-group"><label class="form-label">Company *</label><input class="form-input" id="f-company" placeholder="Acme Ltd"></div>
+              <div class="form-group"><label class="form-label">Email *</label><input class="form-input" id="f-email" placeholder="jane@acme.com" type="email"></div>
+              <div class="form-group"><label class="form-label">Phone (optional)</label><input class="form-input" id="f-phone" placeholder="+44 7700 900000"></div>
+              <div class="form-group"><label class="form-label">Order reference</label><input class="form-input" id="f-ref" placeholder="e.g. PO-2024-001"></div>
+              <div class="form-group"><label class="form-label">No. of items</label><input class="form-input" id="f-items" placeholder="e.g. 50" type="number"></div>
+              <div class="form-group full"><label class="form-label">Special instructions</label><textarea class="form-input" id="f-notes" placeholder="Fragile items, cold storage, urgent dispatch, any other notes..."></textarea></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-header"><span class="card-title">Upload files</span></div>
+          <div class="card-body">
+            <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-inp').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+              <span class="upload-icon-lg">📄</span>
+              <div class="upload-text">Drop files here or click to browse</div>
+              <div class="upload-sub">PDFs, images — order sheets, shipping labels, packing lists</div>
+            </div>
+            <input type="file" id="file-inp" multiple accept=".pdf,.png,.jpg,.jpeg" style="display:none" onchange="addFiles(this.files)">
+            <div id="file-preview" style="margin-top:10px"></div>
+          </div>
+        </div>
+        <!-- WhatsApp Option -->
+        <div class="wa-panel" style="margin-bottom:1rem">
+          <div class="wa-panel-title">📱 Submit via WhatsApp instead</div>
+          <div class="wa-panel-sub">Send your order details directly to our WhatsApp number</div>
+          <div class="wa-link-box" id="wa-link-box">Loading...</div>
+          <div class="wa-actions">
+            <button class="btn btn-sm btn-wa-copy" onclick="copyWALink()">Copy link</button>
+            <button class="btn btn-sm btn-whatsapp" onclick="openWA()">📱 Open WhatsApp</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn" onclick="clearForm()">Clear</button>
+          <button class="btn btn-primary" onclick="submitOrder()">Submit order →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings / WhatsApp -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><div class="page-title">Settings</div></div>
+      <div class="two-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">WhatsApp integration</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Set your business WhatsApp number. Clients can tap a link to send orders directly to you.</p>
+            <div class="form-group" style="margin-bottom:12px"><label class="form-label">WhatsApp number (with country code)</label><input class="form-input" id="wa-number" placeholder="+447700900000" value="+447700900000"></div>
+            <div class="form-group" style="margin-bottom:12px"><label class="form-label">Welcome message template</label><textarea class="form-input" id="wa-template" style="height:100px">Hi, I'd like to submit an order for fulfilment. Company: [Company Name]. Order Ref: [Ref]. Items: [Details].</textarea></div>
+            <button class="btn btn-primary btn-sm" onclick="saveWASettings()">Save settings</button>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+              <div class="section-label">Your client portal link</div>
+              <div style="background:var(--surface2);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;word-break:break-all;margin-bottom:8px" id="portal-link">https://swiftfulfil.app/submit/your-centre</div>
+              <button class="btn btn-sm" onclick="copyPortalLink()">Copy portal link</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Notification preferences</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Configure when you receive alerts for your fulfilment centre.</p>
+            <div id="notif-opts"></div>
+            <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="showToast('Notification settings saved!','success')">Save preferences</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Team members</span><button class="btn btn-sm" onclick="showToast('Team management coming soon','info')">+ Add</button></div>
+          <div class="card-body" id="team-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Export & reports</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:14px">Download your order data for accounting or reporting.</p>
+            <div class="btn-group" style="flex-direction:column;align-items:flex-start">
+              <button class="btn btn-sm" onclick="exportCSV()">⬇ Export all orders (CSV)</button>
+              <button class="btn btn-sm" onclick="exportCSV('done')">⬇ Completed orders only</button>
+              <button class="btn btn-sm" onclick="exportCSV('pending')">⬇ Pending orders</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Order detail</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ===== DATA =====
+let currentUser = null;
+let selectedRole = 'owner';
+let ordersFilter = 'all';
+let empFilter = 'all';
+let selectedFiles = [];
+let waNumber = '+447700900000';
+let waTemplate = "Hi, I'd like to submit an order for fulfilment. Company: [Company Name]. Order Ref: [Ref]. Items: [Details].";
+
+let orders = [
+  { id:'FC-001', client:'Sarah Mitchell', company:'Bloom Cosmetics', email:'orders@bloom.com', phone:'+447700100001', date:'2025-03-28', status:'done', notes:'Handle with care — glass bottles. Pack individually.', files:['bloom_order_sheet.pdf','shipping_labels_bloom.pdf'], items:120, ref:'BC-2025-001' },
+  { id:'FC-002', client:'James Turner', company:'TechGadgets UK', email:'fulfill@techgadgets.co.uk', phone:'', date:'2025-03-29', status:'processing', notes:'Priority same-day dispatch needed. Pre-labelled boxes in storage bay 3.', files:['TG_march_order.pdf'], items:45, ref:'TG-889' },
+  { id:'FC-003', client:'Priya Patel', company:'Sunny Snacks Co', email:'ops@sunnysnacks.com', phone:'+447700100003', date:'2025-03-30', status:'pending', notes:'3 pallets. Fragile. Cold storage labels on outer boxes.', files:['snacks_pallet_order.pdf','cold_labels_v2.pdf','packing_list.pdf'], items:300, ref:'SS-MAR-030' },
+  { id:'FC-004', client:'Marcus Webb', company:'HomeStyle UK', email:'warehouse@homestyle.com', phone:'', date:'2025-03-31', status:'pending', notes:'', files:['HS_march_batch.pdf'], items:80, ref:'HS-0412' },
+  { id:'FC-005', client:'Layla Chen', company:'PetPals Direct', email:'stock@petpals.com', phone:'+447700100005', date:'2025-03-31', status:'issue', notes:'ISSUE: Missing label for item SKU-4B. Contact client before dispatch.', files:['petpals_order.pdf'], items:60, ref:'PP-2025-60' },
+];
+
+let activityLog = [
+  { text:'FC-001 marked as completed by Sarah', color:'#15803D', time:'2 hours ago' },
+  { text:'FC-002 started processing — James', color:'#1D4ED8', time:'3 hours ago' },
+  { text:'New order FC-005 submitted by PetPals Direct', color:'#D97706', time:'5 hours ago' },
+  { text:'New order FC-004 submitted by HomeStyle UK', color:'#D97706', time:'6 hours ago' },
+  { text:'FC-003 submitted — Sunny Snacks, 300 items', color:'#D97706', time:'8 hours ago' },
+];
+
+const navConfigs = {
+  owner: [
+    { id:'dashboard', label:'Dashboard', icon:'📊' },
+    { id:'orders', label:'All orders', icon:'📋' },
+    { id:'queue', label:'Employee view', icon:'📦' },
+    { id:'submit', label:'Submit order', icon:'➕' },
+    { id:'settings', label:'Settings', icon:'⚙️' },
+  ],
+  employee: [
+    { id:'queue', label:'My queue', icon:'📦' },
+    { id:'submit', label:'Submit order', icon:'➕' },
+  ],
+  client: [
+    { id:'submit', label:'Submit order', icon:'➕' },
+  ],
+};
+
+// ===== AUTH =====
+function selectRole(role, el) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function login() {
+  const name = document.getElementById('login-name').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  if(!name) { showToast('Please enter your name','error'); return; }
+  if(pass !== 'password') { showToast('Incorrect password. Hint: "password"','error'); return; }
+  currentUser = { name, role: selectedRole };
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  setupNav();
+  updateUserDisplay();
+  renderDashboard();
+  renderOrders();
+  renderEmployee();
+  renderWALink();
+  renderSettings();
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const firstPage = navConfigs[selectedRole][0].id;
+  showPage(firstPage);
+}
+function logout() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+}
+function setupNav() {
+  const links = navConfigs[currentUser.role] || navConfigs.owner;
+  const pending = orders.filter(o=>o.status==='pending').length;
+  document.getElementById('nav-links').innerHTML = links.map(l=>`
+    <div class="nav-item" id="nav-${l.id}" onclick="showPage('${l.id}')">
+      <span class="nav-icon">${l.icon}</span> ${l.label}
+      ${l.id==='queue'&&pending>0 ? `<span class="nav-badge">${pending}</span>` : ''}
+    </div>`).join('');
+}
+function updateUserDisplay() {
+  document.getElementById('user-name-display').textContent = currentUser.name;
+  document.getElementById('user-role-display').textContent = currentUser.role.charAt(0).toUpperCase()+currentUser.role.slice(1);
+  document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+}
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  const nav = document.getElementById('nav-'+id);
+  if(nav) nav.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  if(id==='queue') renderEmployee();
+  if(id==='orders') renderOrders();
+  if(id==='submit') renderWALink();
+}
+
+// ===== HELPERS =====
+function badge(s) {
+  const m={pending:'badge-pending',processing:'badge-processing',done:'badge-done',issue:'badge-issue'};
+  const l={pending:'Pending',processing:'In progress',done:'Completed',issue:'Issue'};
+  return `<span class="badge ${m[s]||'badge-pending'}">${l[s]||s}</span>`;
+}
+function fmtDate(d) {
+  if(!d) return '';
+  return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+function statusColor(s) { return {pending:'#D97706',processing:'#1D4ED8',done:'#15803D',issue:'#B91C1C'}[s]||'#888'; }
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const total=orders.length, pending=orders.filter(o=>o.status==='pending').length,
+    processing=orders.filter(o=>o.status==='processing').length,
+    done=orders.filter(o=>o.status==='done').length,
+    issues=orders.filter(o=>o.status==='issue').length;
+  document.getElementById('m-total').textContent=total;
+  document.getElementById('m-pending').textContent=pending;
+  document.getElementById('m-progress').textContent=processing;
+  document.getElementById('m-done').textContent=done;
+  const bars=[{l:'Pending',c:pending,col:'#D97706'},{l:'In progress',c:processing,col:'#1D4ED8'},{l:'Completed',c:done,col:'#15803D'},{l:'Issues',c:issues,col:'#B91C1C'}];
+  document.getElementById('bar-chart').innerHTML=bars.map(b=>`<div class="bar-row"><span class="bar-label">${b.l}</span><div class="bar-track"><div class="bar-fill" style="width:${total?Math.round(b.c/total*100):0}%;background:${b.col}"></div></div><span class="bar-count">${b.c}</span></div>`).join('');
+  document.getElementById('activity-count').textContent=activityLog.length+' events';
+  document.getElementById('activity-feed').innerHTML=activityLog.map(a=>`<div class="activity-item"><div class="activity-dot" style="background:${a.color}"></div><div class="activity-text">${a.text}</div><div class="activity-time">${a.time}</div></div>`).join('');
+  const recent=orders.slice(-6).reverse();
+  document.getElementById('dash-tbody').innerHTML=recent.map(o=>`<tr><td><span style="font-family:'DM Mono',monospace;font-size:12.5px">${o.id}</span></td><td><div class="client-name">${o.client}</div><div class="client-co">${o.company}</div></td><td>${fmtDate(o.date)}</td><td><span style="font-size:12px;color:var(--text2)">${o.files.length} file${o.files.length!==1?'s':''}</span></td><td>${badge(o.status)}</td><td><button class="btn btn-sm" onclick="openModal('${o.id}')">View</button></td></tr>`).join('');
+  setupNav();
+}
+
+// ===== ALL ORDERS =====
+function setFilter(el,val) {
+  document.querySelectorAll('#orders-filter .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); ordersFilter=val; renderOrders();
+}
+function renderOrders() {
+  const q=(document.getElementById('search-input')||{value:''}).value.toLowerCase();
+  let list=orders;
+  if(ordersFilter!=='all') list=list.filter(o=>o.status===ordersFilter);
+  if(q) list=list.filter(o=>(o.client+o.company+o.id+o.ref).toLowerCase().includes(q));
+  document.getElementById('orders-tbody').innerHTML=list.length?list.map(o=>`<tr>
+    <td><span style="font-family:'DM Mono',monospace;font-size:12.5px">${o.id}</span></td>
+    <td><div class="client-name">${o.client}</div></td>
+    <td>${o.company}</td>
+    <td>${fmtDate(o.date)}</td>
+    <td><span style="font-size:12px;color:var(--text2)">${o.files.length} file${o.files.length!==1?'s':''}</span></td>
+    <td>${badge(o.status)}</td>
+    <td><div class="btn-group">
+      <button class="btn btn-sm" onclick="openModal('${o.id}')">View</button>
+      ${o.status==='pending'?`<button class="btn btn-sm btn-success" onclick="updateStatus('${o.id}','processing')">Start</button>`:''}
+      ${o.status==='processing'?`<button class="btn btn-sm btn-primary" onclick="updateStatus('${o.id}','done')">Complete</button>`:''}
+    </div></td>
+  </tr>`).join(''):`<tr><td colspan="7"><div class="empty-state"><span class="empty-icon">📭</span><div class="empty-text">No orders found</div></div></td></tr>`;
+}
+
+// ===== EMPLOYEE =====
+function setEmpFilter(el,val) {
+  document.querySelectorAll('#emp-filter .chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active'); empFilter=val; renderEmployee();
+}
+function renderEmployee() {
+  let list=orders;
+  if(empFilter!=='all') list=list.filter(o=>o.status===empFilter);
+  if(!list.length) { document.getElementById('emp-list').innerHTML=`<div class="empty-state"><span class="empty-icon">✅</span><div class="empty-text">No orders in this category</div></div>`; return; }
+  document.getElementById('emp-list').innerHTML=list.map(o=>`
+    <div class="order-card">
+      <div class="order-card-top">
+        <div>
+          <div class="order-card-id">${o.id} — ${o.company}</div>
+        </div>
+        ${badge(o.status)}
+      </div>
+      <div class="order-card-meta">
+        👤 ${o.client} &nbsp;·&nbsp; 📅 ${fmtDate(o.date)} &nbsp;·&nbsp; 📦 ${o.items||'?'} items
+        ${o.ref ? `&nbsp;·&nbsp; Ref: <strong>${o.ref}</strong>` : ''}
+      </div>
+      ${o.notes?`<div class="order-card-notes">📝 ${o.notes}</div>`:''}
+      <div class="files-row">${o.files.map(f=>`<span class="file-tag">📎 ${f}</span>`).join('')}</div>
+      <div class="btn-group">
+        ${o.status==='pending'?`<button class="btn btn-sm btn-success" onclick="updateStatus('${o.id}','processing');renderEmployee()">▶ Start processing</button>`:''}
+        ${o.status==='processing'?`<button class="btn btn-sm btn-primary" onclick="updateStatus('${o.id}','done');renderEmployee()">✓ Mark complete</button>`:''}
+        ${o.status==='done'?`<span style="font-size:12px;color:var(--text3);padding:4px 0">Completed</span>`:''}
+        ${o.status!=='issue'?`<button class="btn btn-sm btn-danger" onclick="updateStatus('${o.id}','issue');renderEmployee()">⚑ Flag issue</button>`:`<button class="btn btn-sm" onclick="updateStatus('${o.id}','pending');renderEmployee()">↺ Reopen</button>`}
+        <button class="btn btn-sm btn-ghost" onclick="openModal('${o.id}')">Details</button>
+      </div>
+    </div>`).join('');
+}
+
+// ===== STATUS UPDATE =====
+function updateStatus(id, status) {
+  const o=orders.find(x=>x.id===id); if(!o) return;
+  o.status=status;
+  const labels={pending:'marked pending',processing:'started processing',done:'completed',issue:'flagged as issue'};
+  activityLog.unshift({text:`${id} ${labels[status]} by ${currentUser?.name||'user'}`,color:statusColor(status),time:'just now'});
+  renderDashboard(); renderOrders(); renderEmployee(); setupNav();
+  showToast(`${id} updated: ${labels[status]}`,'success');
+}
+
+// ===== MODAL =====
+function openModal(id) {
+  const o=orders.find(x=>x.id===id); if(!o) return;
+  document.getElementById('modal-title').textContent=`${o.id} — ${o.company}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div style="margin-bottom:14px">${badge(o.status)}</div>
+    <div class="section-label">Client info</div>
+    <div class="info-row"><span class="info-label">Name</span><span class="info-val">${o.client}</span></div>
+    <div class="info-row"><span class="info-label">Company</span><span class="info-val">${o.company}</span></div>
+    <div class="info-row"><span class="info-label">Email</span><span class="info-val"><a href="mailto:${o.email}" style="color:var(--blue)">${o.email}</a></span></div>
+    ${o.phone?`<div class="info-row"><span class="info-label">Phone</span><span class="info-val">${o.phone}</span></div>`:''}
+    <div class="info-row"><span class="info-label">Date</span><span class="info-val">${fmtDate(o.date)}</span></div>
+    <div class="info-row"><span class="info-label">Items</span><span class="info-val">${o.items||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Reference</span><span class="info-val">${o.ref||'—'}</span></div>
+    ${o.notes?`<div style="margin:14px 0 10px"><div class="section-label">Notes</div><div class="order-card-notes">${o.notes}</div></div>`:''}
+    <div style="margin-top:14px"><div class="section-label">Files (${o.files.length})</div><div class="files-row">${o.files.map(f=>`<span class="file-tag">📎 ${f}</span>`).join('')}</div></div>
+    <div style="margin-top:14px"><div class="section-label">WhatsApp client</div>
+      <a href="https://wa.me/${(o.phone||'').replace(/\D/g,'')}" target="_blank" class="btn btn-sm btn-whatsapp" style="display:inline-flex">📱 Message ${o.client}</a>
+    </div>`;
+  let actions='<button class="btn btn-sm" onclick="closeModal()">Close</button>';
+  if(o.status==='pending') actions+=`<button class="btn btn-sm btn-success" onclick="updateStatus('${id}','processing');closeModal()">▶ Start processing</button>`;
+  if(o.status==='processing') actions+=`<button class="btn btn-sm btn-primary" onclick="updateStatus('${id}','done');closeModal()">✓ Mark complete</button>`;
+  if(o.status!=='issue') actions+=`<button class="btn btn-sm btn-danger" onclick="updateStatus('${id}','issue');closeModal()">⚑ Flag issue</button>`;
+  document.getElementById('modal-footer').innerHTML=actions;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+// ===== SUBMIT ORDER =====
+function addFiles(files) {
+  for(const f of files) {
+    if(!selectedFiles.find(x=>x.name===f.name)) selectedFiles.push(f);
+  }
+  renderFilePreviews();
+}
+function renderFilePreviews() {
+  document.getElementById('file-preview').innerHTML=selectedFiles.length?selectedFiles.map(f=>`<span class="file-pill">📎 ${f.name} <button onclick="removeFile('${f.name}')">×</button></span>`).join(''):'';
+}
+function removeFile(name) { selectedFiles=selectedFiles.filter(f=>f.name!==name); renderFilePreviews(); }
+function dragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('dragover'); }
+function dragLeave() { document.getElementById('drop-zone').classList.remove('dragover'); }
+function dropFiles(e) { e.preventDefault(); dragLeave(); addFiles(e.dataTransfer.files); }
+function clearForm() {
+  ['f-name','f-company','f-email','f-phone','f-ref','f-items','f-notes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  selectedFiles=[]; renderFilePreviews();
+}
+function submitOrder() {
+  const name=document.getElementById('f-name').value.trim();
+  const company=document.getElementById('f-company').value.trim();
+  const email=document.getElementById('f-email').value.trim();
+  if(!name||!company||!email) { showToast('Please fill in name, company and email','error'); return; }
+  const id='FC-'+String(orders.length+1).padStart(3,'0');
+  const today=new Date().toISOString().split('T')[0];
+  const files=selectedFiles.length?selectedFiles.map(f=>f.name):[company.replace(/\s+/g,'-').toLowerCase()+'_order.pdf'];
+  orders.push({
+    id, client:name, company, email,
+    phone:document.getElementById('f-phone').value.trim(),
+    date:today, status:'pending',
+    notes:document.getElementById('f-notes').value.trim(),
+    files, items:parseInt(document.getElementById('f-items').value)||0,
+    ref:document.getElementById('f-ref').value.trim()
+  });
+  activityLog.unshift({text:`New order ${id} submitted by ${company}`,color:'#D97706',time:'just now'});
+  clearForm();
+  showToast(`Order ${id} submitted successfully!`,'success');
+  setupNav();
+  setTimeout(()=>showPage('dashboard'),600);
+}
+
+// ===== WHATSAPP =====
+function renderWALink() {
+  const num=(waNumber||'').replace(/\D/g,'');
+  const msg=encodeURIComponent(waTemplate);
+  const link=`https://wa.me/${num}?text=${msg}`;
+  const el=document.getElementById('wa-link-box');
+  if(el) el.textContent=link;
+}
+function openWA() {
+  const num=waNumber.replace(/\D/g,'');
+  const msg=encodeURIComponent(waTemplate);
+  window.open(`https://wa.me/${num}?text=${msg}`,'_blank');
+}
+function copyWALink() {
+  const num=waNumber.replace(/\D/g,'');
+  const msg=encodeURIComponent(waTemplate);
+  navigator.clipboard.writeText(`https://wa.me/${num}?text=${msg}`).then(()=>showToast('WhatsApp link copied!','success'));
+}
+function saveWASettings() {
+  waNumber=document.getElementById('wa-number').value;
+  waTemplate=document.getElementById('wa-template').value;
+  renderWALink();
+  showToast('WhatsApp settings saved!','success');
+}
+function copyPortalLink() {
+  navigator.clipboard.writeText(document.getElementById('portal-link').textContent).then(()=>showToast('Portal link copied!'));
+}
+
+// ===== CSV EXPORT =====
+function exportCSV(statusFilter) {
+  let list=statusFilter ? orders.filter(o=>o.status===statusFilter) : orders;
+  const rows=[['Order ID','Client','Company','Email','Phone','Date','Items','Ref','Status','Notes','Files']];
+  list.forEach(o=>rows.push([o.id,o.client,o.company,o.email,o.phone,o.date,o.items,o.ref,o.status,`"${(o.notes||'').replace(/"/g,'""')}"`,o.files.join('; ')]));
+  const csv=rows.map(r=>r.join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=`orders${statusFilter?'-'+statusFilter:''}-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  showToast('CSV downloaded!','success');
+}
+
+// ===== SETTINGS =====
+const notifOptions=[
+  {key:'new_order',label:'New order submitted',checked:true},
+  {key:'status_change',label:'Status changes',checked:true},
+  {key:'issues',label:'Issues flagged',checked:true},
+  {key:'daily_summary',label:'Daily summary',checked:false},
+];
+const teamMembers=[
+  {name:'Sam Clarke',role:'Employee',avatar:'SC'},
+  {name:'Priya Nair',role:'Employee',avatar:'PN'},
+  {name:'Liam Burns',role:'Employee',avatar:'LB'},
+];
+function renderSettings() {
+  document.getElementById('notif-opts').innerHTML=notifOptions.map(n=>`
+    <label style="display:flex;align-items:center;gap:10px;margin-bottom:10px;cursor:pointer;font-size:13px">
+      <input type="checkbox" ${n.checked?'checked':''} onchange="showToast('Preference updated')"> ${n.label}
+    </label>`).join('');
+  document.getElementById('team-list').innerHTML=teamMembers.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:34px;height:34px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--text2)">${t.avatar}</div>
+      <div><div style="font-size:13px;font-weight:500">${t.name}</div><div style="font-size:12px;color:var(--text2)">${t.role}</div></div>
+    </div>`).join('');
+}
+
+// ===== TOAST =====
+function showToast(msg, type='') {
+  const c=document.getElementById('toast-container');
+  const d=document.createElement('div');
+  d.className='toast '+(type||'');
+  d.innerHTML=(type==='success'?'✓ ':type==='error'?'✕ ':type==='info'?'ℹ ':'') + msg;
+  c.appendChild(d);
+  setTimeout(()=>d.classList.add('show'),10);
+  setTimeout(()=>{ d.classList.remove('show'); setTimeout(()=>d.remove(),300); },3000);
+}
+</script>
+</body>
+</html>
